@@ -1,118 +1,124 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>Fast Raycaster w/ Floor/Ceiling Texturing</title>
-  </head>
 
-  <body>
-    <canvas id="canvas" width="640" height="480">
-    </canvas>
+<head>
+  <title>Fast Raycaster w/ Floor/Ceiling Texturing</title>
+</head>
 
-    <p id="debug"></p>
+<body>
+  <canvas id="canvas" width="640" height="480"></canvas>
+  <p id="debug"></p>
 
-    <script type="text/javascript">
-      var canvas = document.getElementById ("canvas"),
-          debug = document.getElementById ("debug"),
-          ctx = canvas.getContext ("2d"),
-          id = ctx.getImageData (0, 0, canvas.width, canvas.height),
-          i = canvas.height >> 1,
-          distance = new Array (i)
+  <script type="module">
+    const canvas = document.getElementById("canvas");
+    const debug = document.getElementById("debug");
+    const ctx = canvas.getContext("2d");
+    const distance = [];
 
-      while (i--)
-        distance[i] = 128 * canvas.width / i
+    const init = () => {
+      const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const i = canvas.height >> 1;
 
-      delete i
+      for (let i = 0; i < canvas.height >> 1; i++) {
+        distance[i] = 128 * canvas.width / i;
+      }
 
-      function draw (id, cx, cy, ca) {
-        var width = id.width,
-            height = id.height >> 1,
-            data = id.data,
-            cos = Math.cos (ca),
-            sin = Math.sin (ca),
-            invWidth = 1 / width,
-            skip = (width - 1) << 2,
-            x, tx, a, b, i, j, y, t, u, v
+      const draw = (id, cx, cy, ca) => {
+        const width = id.width;
+        const height = id.height >> 1;
+        const data = id.data;
+        const cos = Math.cos(ca);
+        const sin = Math.sin(ca);
+        const invWidth = 1 / width;
+        const skip = (width - 1) << 2;
+
+        let x, tx, a, b, i, j, y, t, u, v;
 
         /* Draw floors and ceilings. */
-        x = width
-        tx = 0.5
+        x = width;
+        tx = 0.5;
         while (x--) {
-          tx -= invWidth
-          a = tx * cos - sin
-          b = cos + tx * sin
-          i = x << 2
-          j = data.length + ((x + 1 - width) << 2)
-          y = height
+          tx -= invWidth;
+          a = tx * cos - sin;
+          b = cos + tx * sin;
+          i = x << 2;
+          j = data.length + ((x + 1 - width) << 2);
+          y = height;
           while (y--) {
-            t = distance[y]
-            u = cx + a * t
-            v = cy + b * t
+            t = distance[y];
+            u = cx + a * t;
+            v = cy + b * t;
 
             if (u < 0) {
-              t = (v + b * u) & 255
-              break
+              t = (v + b * u) & 255;
+              break;
             }
 
             if (u >= 2048) {
-              t = 255 - ((v + b * (2048 - u)) & 255)
-              break
+              t = 255 - ((v + b * (2048 - u)) & 255);
+              break;
             }
 
             if (v < 0) {
-              t = 255 - ((u + a * v) & 255)
-              break
+              t = 255 - ((u + a * v) & 255);
+              break;
             }
 
             if (v >= 2048) {
-              t = (u + a * (2048 - v)) & 255
-              break
+              t = (u + a * (2048 - v)) & 255;
+              break;
             }
 
-            t = (u ^ v) & 255
+            t = (u ^ v) & 255;
 
             data[i++] =
-            data[i++] =
-            data[i++] = t
-            data[i++] = 255
-            i += skip
+              data[i++] =
+              data[i++] = t;
+            data[i++] = 255;
+            i += skip;
 
-            data[--j] = 255
+            data[--j] = 255;
             data[--j] =
-            data[--j] =
-            data[--j] = t
-            j -= skip
+              data[--j] =
+              data[--j] = t;
+            j -= skip;
           }
 
           /* Draw walls. */
-          y++
-          y <<= 1
-          a = 0
-          b = 255 / y
+          y++;
+          y <<= 1;
+          a = 0;
+          b = 255 / y;
           while (y--) {
             data[i++] =
-            data[i++] =
-            data[i++] = t ^ a
-            data[i++] = 255
-            i += skip
-            a += b
+              data[i++] =
+              data[i++] = t ^ a;
+            data[i++] = 255;
+            i += skip;
+            a += b;
           }
         }
-      }
+      };
 
-      var start = Date.now (),
-          frame = 0
+      const start = Date.now();
+      let frame = 0;
 
-      setInterval (function () {
-        frame++
-        var millis = Date.now () - start
+      setInterval(() => {
+        frame++;
+        const millis = Date.now() - start;
 
-        draw (id, 1024, 1024, millis * Math.PI / 8000)
-        ctx.putImageData (id, 0, 0)
-      }, 0)
+        draw(id, 1024, 1024, (millis * Math.PI) / 8000);
+        ctx.putImageData(id, 0, 0);
+      }, 0);
 
-      setInterval (function () {
-        debug.innerHTML = Math.round (frame * 1000 / (Date.now () - start)) + " FPS"
-      }, 1000)
-    </script>
-  </body>
+      setInterval(() => {
+        debug.innerHTML = Math.round((frame * 1000) / (Date.now() - start)) + " FPS";
+      }, 1000);
+    };
+
+    // Wait for the document to load before initializing the canvas
+    window.addEventListener("load", init);
+  </script>
+</body>
+
 </html>
